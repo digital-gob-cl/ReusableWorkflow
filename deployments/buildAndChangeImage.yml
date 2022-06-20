@@ -1,0 +1,62 @@
+name: Create, Publish and Change Image
+env:
+  TIMEOUT: 5m
+  CLUSTER_NAME: eks-test
+on:
+  workflow_call:
+    inputs:
+      namespace:
+        required: true
+        type: string
+      app_name:
+        required: true
+        type: string
+      image_repository_name:
+        required: true
+        type: string
+      cluster_name:
+        required: true
+        type: string
+    secrets:
+      aws_account_id:
+        required: true
+      
+jobs:
+  deployment:
+    runs-on: gh-runner-dflt
+    environment: dev
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: set job env
+        run: |
+          echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+          echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c 1-8`" >> $GITHUB_ENV
+          aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com
+      - name: build
+        run: |
+           docker build -t ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:dev-latest -t ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:${TAG}-${SHORT_SHA} .
+      - name: image upload
+        run: |
+          docker push ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:dev-latest
+          docker push ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:${TAG}-${SHORT_SHA}
+      - name: remove image uploads
+        run: |
+          docker image rm ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:dev-latest
+          docker image rm ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:${TAG}-${SHORT_SHA}
+      - name: kubernetes deploy
+        id: deploy
+        run: |
+          aws eks update-kubeconfig --name ${inputs.cluster_name} --region us-west-2
+          kubectl set image deploy/$APP_NAME $APP_NAME=${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:${TAG}-${SHORT_SHA} --record -n ${inputs.namespace}
+      - name: kubernetes deployment status
+        run: |
+          kubectl rollout status deployment ${inputs.app_name} --timeout=${TIMEOUT} -n ${inputs.namespace}
+      - name: rollback
+        if: steps.deploy.outcome != 'success'
+        run: |
+          kubectl rollout undo deploy ${inputs.app_name} -n ${inputs.namespace}
+      - name: kubernetes deployment check
+        run: |
+          kubectl get deploy ${inputs.app_name} -n ${inputs.namespace}
