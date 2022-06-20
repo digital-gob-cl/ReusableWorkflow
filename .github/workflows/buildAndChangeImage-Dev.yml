@@ -1,7 +1,5 @@
 name: Create, Publish and Change Image
-env:
-  TIMEOUT: 5m
-  CLUSTER_NAME: eks-test
+
 on:
   workflow_call:
     inputs:
@@ -20,7 +18,6 @@ on:
     secrets:
       aws_account_id:
         required: true
-      
 jobs:
   deployment:
     runs-on: gh-runner-dflt
