@@ -18,12 +18,15 @@ on:
       timeout:
         type: string
         default: "5m"
+      runner:
+        type: string
+        default: "gh-runner-dflt"        
     secrets:
       aws_account_id:
         required: true
 jobs:
   deployment:
-    runs-on: gh-runner-dflt
+    runs-on: ${{inputs.runner}}
     environment: dev
     steps:
       - name: checkout
@@ -49,7 +52,7 @@ jobs:
         id: deploy
         run: |
           aws eks update-kubeconfig --name ${{inputs.cluster_name}} --region us-west-2
-          kubectl set image deploy/$APP_NAME $APP_NAME=${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} --record -n ${{inputs.namespace}}
+          kubectl set image deploy/${{inputs.app_name}} ${{inputs.app_name}}=${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} --record -n ${{inputs.namespace}}
       - name: kubernetes deployment status
         run: |
           kubectl rollout status deployment ${{inputs.app_name}} --timeout=${{inputs.timeout}} -n ${{inputs.namespace}}
