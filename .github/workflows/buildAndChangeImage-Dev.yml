@@ -15,6 +15,9 @@ on:
       cluster_name:
         required: true
         type: string
+      timeout:
+        type: string
+        default: "5m"
     secrets:
       aws_account_id:
         required: true
@@ -30,30 +33,30 @@ jobs:
         run: |
           echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
           echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c 1-8`" >> $GITHUB_ENV
-          aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com
+          aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com
       - name: build
         run: |
-           docker build -t ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:dev-latest -t ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:${TAG}-${SHORT_SHA} .
+           docker build -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:dev-latest -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} .
       - name: image upload
         run: |
-          docker push ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:dev-latest
-          docker push ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:${TAG}-${SHORT_SHA}
+          docker push ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:dev-latest
+          docker push ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA}
       - name: remove image uploads
         run: |
-          docker image rm ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:dev-latest
-          docker image rm ${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:${TAG}-${SHORT_SHA}
+          docker image rm ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:dev-latest
+          docker image rm ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA}
       - name: kubernetes deploy
         id: deploy
         run: |
-          aws eks update-kubeconfig --name ${inputs.cluster_name} --region us-west-2
-          kubectl set image deploy/$APP_NAME $APP_NAME=${secrets.aws_account_id}.dkr.ecr.us-west-2.amazonaws.com/${inputs.image_repository_name}:${TAG}-${SHORT_SHA} --record -n ${inputs.namespace}
+          aws eks update-kubeconfig --name ${{inputs.cluster_name}} --region us-west-2
+          kubectl set image deploy/$APP_NAME $APP_NAME=${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} --record -n ${{inputs.namespace}}
       - name: kubernetes deployment status
         run: |
-          kubectl rollout status deployment ${inputs.app_name} --timeout=${TIMEOUT} -n ${inputs.namespace}
+          kubectl rollout status deployment ${{inputs.app_name}} --timeout=${{inputs.timeout}} -n ${{inputs.namespace}}
       - name: rollback
         if: steps.deploy.outcome != 'success'
         run: |
-          kubectl rollout undo deploy ${inputs.app_name} -n ${inputs.namespace}
+          kubectl rollout undo deploy ${{inputs.app_name}} -n ${{inputs.namespace}}
       - name: kubernetes deployment check
         run: |
-          kubectl get deploy ${inputs.app_name} -n ${inputs.namespace}
+          kubectl get deploy ${{inputs.app_name}} -n ${{inputs.namespace}}
