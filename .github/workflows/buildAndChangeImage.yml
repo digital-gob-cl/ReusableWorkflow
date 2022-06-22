@@ -20,14 +20,17 @@ on:
         default: "5m"
       runner:
         type: string
-        default: "gh-runner-dflt"        
+        default: "gh-runner-dflt" 
+      environment:
+        type: string
+        default: "dev" 
     secrets:
       aws_account_id:
         required: true
 jobs:
   deployment:
     runs-on: ${{inputs.runner}}
-    environment: dev
+    environment: ${{inputs.environment}}
     steps:
       - name: checkout
         uses: actions/checkout@v2
