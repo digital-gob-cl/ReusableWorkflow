@@ -56,7 +56,7 @@ jobs:
     - name: kubernetes deploy
       id: deploy
       run: |
-        kubectl set image deploy/ ${{inputs.app_name}}  ${{inputs.app_name}}=${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} --record
+        kubectl set image deploy/${{inputs.app_name}}  ${{inputs.app_name}}=${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} --record
     
     - name: kubernetes deployment status
       run: |
