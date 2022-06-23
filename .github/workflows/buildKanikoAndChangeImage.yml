@@ -42,6 +42,7 @@ jobs:
 
     - name: set job env
       run: |
+        echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
         echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c 1-8`" >> $GITHUB_ENV
         aws eks update-kubeconfig --name ${{inputs.cluster_name}} --region us-west-2
         kubectl config set-context --current --namespace=${{inputs.namespace}}
