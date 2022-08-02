@@ -30,7 +30,7 @@ jobs:
           aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com
       - name: build
         run: |
-           docker build -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:dev-latest -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} .
+           docker build -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${{inputs.environment}}-latest -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} .
       - name: image upload
         run: |
           docker push ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${{inputs.environment}}-latest
