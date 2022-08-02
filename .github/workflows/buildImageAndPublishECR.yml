@@ -25,7 +25,6 @@ jobs:
 
       - name: set job env
         run: |
-          echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
           echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c 1-8`" >> $GITHUB_ENV
           aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com
       - name: build
