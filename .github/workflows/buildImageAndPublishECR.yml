@@ -30,13 +30,13 @@ jobs:
           aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com
       - name: build
         run: |
-           docker build -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${{inputs.environment}}-latest -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} .
+           docker build -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${{inputs.environment}}-latest -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${{inputs.environment}}-${SHORT_SHA} .
       - name: image upload
         run: |
           docker push ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${{inputs.environment}}-latest
-          docker push ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA}
+          docker push ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${{inputs.environment}}-${SHORT_SHA}
       - name: remove image uploads
         run: |
-          docker image rm ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:dev-latest
-          docker image rm ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA}
+          docker image rm ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${{inputs.environment}}-latest
+          docker image rm ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${{inputs.environment}}-${SHORT_SHA}
   
