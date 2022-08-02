@@ -1,0 +1,42 @@
+name: Create and Publish Image
+
+on:
+  workflow_call:
+    inputs:
+      image_repository_name:
+        required: true
+        type: string
+      runner:
+        type: string
+        default: "gh-runner-dflt" 
+      environment:
+        type: string
+        default: "dev" 
+    secrets:
+      aws_account_id:
+        required: true
+jobs:
+  deployment:
+    runs-on: ${{inputs.runner}}
+    environment: ${{inputs.environment}}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: set job env
+        run: |
+          echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+          echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c 1-8`" >> $GITHUB_ENV
+          aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com
+      - name: build
+        run: |
+           docker build -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:dev-latest -t ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} .
+      - name: image upload
+        run: |
+          docker push ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:dev-latest
+          docker push ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA}
+      - name: remove image uploads
+        run: |
+          docker image rm ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:dev-latest
+          docker image rm ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA}
+  
