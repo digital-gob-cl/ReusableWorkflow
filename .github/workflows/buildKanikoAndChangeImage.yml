@@ -48,7 +48,7 @@ jobs:
         kubectl config set-context --current --namespace=${{inputs.namespace}}
     - name: build with kaniko.
       run: |
-        kubectl run --rm kaniko-${{inputs.app_name}}-${SHORT_SHA} --namespace=github-runner --attach=true --image=gcr.io/kaniko-project/executor:v1.9.2 \
+        kubectl run --rm kaniko-${{inputs.app_name}}-${SHORT_SHA} --namespace=github-runner --attach=true --image=gcr.io/kaniko-project/executor:v1.9.0 \
         --restart=Never -- \
         --verbosity=${{inputs.kaniko_verbosity}} \
         --context=git://${{secrets.personal_token}}@github.com//${GITHUB_REPOSITORY} \
