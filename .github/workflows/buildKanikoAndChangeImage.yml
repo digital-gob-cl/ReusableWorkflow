@@ -50,11 +50,11 @@ jobs:
       run: |
         kubectl run --rm kaniko-${{inputs.app_name}}-${SHORT_SHA} --namespace=github-runner --attach=true --image=gcr.io/kaniko-project/executor:v1.9.0 \
         --restart=Never -- \
-        --cache=false \
-        --verbosity=${{inputs.kaniko_verbosity}} \
-        --context=git://${{secrets.personal_token}}@github.com//${GITHUB_REPOSITORY} \
-        --destination=${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} \
-        --destination=${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:latest --git branch=${GITHUB_BRANCH}
+        --cache false \
+        --verbosity ${{inputs.kaniko_verbosity}} \
+        --context git://${{secrets.personal_token}}@github.com//${GITHUB_REPOSITORY} \
+        --destination ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:${TAG}-${SHORT_SHA} \
+        --destination ${{secrets.aws_account_id}}.dkr.ecr.us-west-2.amazonaws.com/${{inputs.image_repository_name}}:latest --git branch=${GITHUB_BRANCH}
     - name: kubernetes deploy
       id: deploy
       run: |
